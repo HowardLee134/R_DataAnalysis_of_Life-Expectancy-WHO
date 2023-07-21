@@ -1,0 +1,109 @@
+---
+title: "Presentation"
+author: "Chunjingwen Cui"
+date: "2023-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+setwd("~/Desktop")
+lifeExpectancy<- read_csv("Life Expectancy Data.csv")
+
+
+## only use 4 variables
+lifeExpectancyP1 <- lifeExpectancy[,c("Country", "Status","Life expectancy", "Alcohol","Schooling")]
+
+
+## description of variables
+
+str(lifeExpectancyP1)
+summary(lifeExpectancyP1)
+
+lifeExpectancy %>%
+  group_by(Status) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+lifeExpectancy %>%
+  group_by(Country) %>%
+  summarize(avg_LifeExpectancy = mean(`Life expectancy`)) %>%
+  arrange(desc(avg_LifeExpectancy))
+
+lifeExpectancy %>%
+  group_by(Country) %>%
+  summarize(avg_Alcohol = mean(Alcohol)) %>%
+  arrange(desc(avg_Alcohol))
+
+lifeExpectancy %>%
+  group_by(Status) %>%
+  drop_na(Schooling) %>%
+  summarize(avg_Schooling = mean(Schooling)) %>%
+  arrange(desc(avg_Schooling))
+
+
+## plots
+lifeExpectancy %>%
+  ggplot(aes(Schooling, `Life expectancy`,  
+             color = Status)) +
+  geom_point()
+
+
+lifeExpectancy %>%
+  ggplot(aes(Schooling, Alcohol,  
+             color = Status)) +
+  geom_point()
+
+
+lifeExpectancy %>%
+  ggplot(aes(Status, `Life expectancy`)) +
+  geom_boxplot()
+
+
+#correlation
+
+lifeExpectancy %>%
+  select(`Life expectancy`, Schooling, Alcohol, GDP) %>%
+  pairs()
+
+  ## outlier -> spearman better
+lifeExpectancy %>%
+  select(`Life expectancy`, Schooling, Alcohol, GDP) %>%
+  drop_na() %>%
+  cor(method = "spearman")
+
+cor.test(lifeExpectancy$`Life expectancy`, lifeExpectancy$Schooling, method = "spearman")
+cor.test(lifeExpectancy$`Life expectancy`, lifeExpectancy$Schooling)
+
+#linear regression
+lifeExpectancy %>%
+  filter(Schooling > 0) %>%
+  drop_na() %>%
+  ggplot(aes(Schooling, `Life expectancy`)) + 
+  geom_point(aes(color = Status)) + 
+  geom_smooth(method = lm)
+
+subset <- lifeExpectancy %>%
+  filter(Schooling > 0)
+summary(lm(`Life expectancy` ~ Schooling, data = subset))
+
+# t-test
+t.test(`Life expectancy` ~ Status, data = lifeExpectancy)
+lifeExpectancy %>%
+  ggplot(aes(Status, `Life expectancy`)) +
+  geom_boxplot() 
+
+
+schooling15 <- filter(lifeExpectancy, Schooling >= 15)
+t.test(`Life expectancy` ~ Status, data = schooling15)
+schooling15 %>%
+  ggplot(aes(Status, `Life expectancy`)) +
+  geom_boxplot() 
+
+
+```
+

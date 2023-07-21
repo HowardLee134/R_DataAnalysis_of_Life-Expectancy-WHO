@@ -1,0 +1,266 @@
+---
+title: "Project1: Data Analysis of Life Expectancy (WHO)"
+author: "Chunjingwen Cui and MING HAO LEE"
+date: "2023-03-06"
+output: html_document
+---
+
+## Data Set: Life Expectancy (WHO)
+
+We'll be analyzing a dataset with information about many factors affecting life expectancy collected by World Health Organization (WHO). The data comes from this website: https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who?resource=download
+  
+The motivation of us to use this data set is that it has a large amount of data, including 22 columns and 2938 rows, which meets the requirements of this project. In addition, many factors affect life expectancy, and this dataset lists immune-related, mortality, economic, and social factors for 193 countries. By analyzing these data, we can understand how these factors affect human life expectancy. We can also make recommendations to the government to improve the population's life expectancy based on the data analysis results.
+  
+In this data set, each observation represent some data related to life expectancy of a country in a particular year. Each variable presents as follow :
+  
+Country: 193 countries	
+  
+Year: 2000-2015
+  
+Status: Developed or Developing status
+  
+Life expectancy: Life Expectancy in age	
+  
+Adult Mortality: Adult Mortality Rates of both sexes (probability of dying between 15 and 60 years per 1000 population)
+  
+infant deaths: Number of Infant Deaths per 1000 population
+  
+Alcohol: Alcohol, recorded per capita (15+) consumption (in litres of pure alcohol)
+  
+percentage expenditure: Expenditure on health as a percentage of Gross Domestic Product per capita(%)	
+  
+Hepatitis B: Hepatitis B (HepB) immunization coverage among 1-year-old (%)
+  
+Measles: Measles - number of reported cases per 1000 population 
+  
+BMI: Average Body Mass Index of entire population
+  
+under-five deaths: Number of under-five deaths per 1000 population
+  
+Polio: Polio (Pol3) immunization coverage among 1-year-old (%)
+  
+Total expenditure: General government expenditure on health as a percentage of total government expenditure (%)
+  
+Diphtheria: Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-old (%)
+  
+HIV/AIDS: Deaths per 1 000 live births HIV/AIDS (0-4 years)
+  
+GDP: Gross Domestic Product per capital (in USD)	
+  
+Population: Population of the country 
+  
+thinness 1-19 years: Prevalence of thinness among children and adolescents for Age 10 to 19 (%)
+  
+thinness 5-9 years: Prevalence of thinness among children for Age 5 to 9(%)
+  
+Income composition of resources: Human Development Index in terms of income composition of resources (index ranging from 0 to 1)
+  
+Schooling: Number of years of Schooling(years)
+
+  
+## Start Anlysis
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We'll start by reading in the data:
+```{r}
+library(tidyverse)
+setwd("~/Desktop")
+lifeExpectancy<- read_csv("Life Expectancy Data.csv")
+```
+
+
+## Exploratory data analysis
+### Descriptive statistics
+Let's start by finding some summaries of our variables to see which variables we have access to.
+```{r}
+str(lifeExpectancy)
+summary(lifeExpectancy)
+head(lifeExpectancy)
+```
+Based on this output, we have an interesting phenomenon that the Min of some variables are 0 which maybe because the data lost. 
+  
+  
+Let's try to see how many different developing and developed countries within this dataset
+```{r}
+lifeExpectancy %>%
+  group_by(Status) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+```
+  
+In this data set, there are 2426 developing countries more against 512 developed countries. 
+  
+  
+Let's then see which countries has the Longest life expectancy! 
+```{r}
+lifeExpectancy %>%
+  group_by(Country) %>%
+  summarize(avg_LE = mean(`Life expectancy`)) %>%
+  arrange(desc(avg_LE))
+```
+  
+Japan is win! About 82.53 is the highest life expectancy. 
+  
+  
+Then let's look at which countries has the most high average of alcohol consumption. 
+```{r}
+lifeExpectancy %>%
+  group_by(Country) %>%
+  summarize(avg_Al = mean(Alcohol)) %>%
+  arrange(desc(avg_Al))
+```
+Base on the result, United Kingdom of Great Britain and Northern Ireland is the winner which data is around 11.13. 
+  
+  
+Finally, let's take a look at the difference average schooling between developed countries and developing countries. 
+```{r}
+lifeExpectancy %>%
+  group_by(Status) %>%
+  drop_na(Schooling)%>%
+  summarize(avg_Sc = mean(Schooling)) %>%
+  arrange(desc(avg_Sc))
+```
+  
+Base on the result, the developed is 15.8 which is more then 11.2 of developing countries. 
+  
+  
+### Exploratory visualizations
+Now let's find some visualizations of our data. 
+  
+  
+Let's look at the relationships between our quantitative variables:
+```{r}
+lifeExpectancy %>%
+  ggplot(aes(Schooling, `Life expectancy`,  
+             color = Status)) +
+  geom_point()
+
+```
+  
+Based on the output, we could find out that longer schooling, longer life expectation on both Developed or Developing countries. And the developed countries seem like havig longer life expectancy and longer schooling years. 
+  
+Whereas there do have some outliers of schooling. 
+  
+  
+```{r}
+lifeExpectancy %>%
+  ggplot(aes(Schooling, Alcohol,  
+             color = Status)) +
+  geom_point()
+
+```
+  
+This is a scatterplot of Schooling and Alcohol. The result is very interesting. From this chart, we can see that the countries which have longer schooling time may consume more alcohol. Besides, developed countries consume more alcohol than developing countries.
+  
+  
+```{r}
+lifeExpectancy %>%
+  ggplot(aes(Status, `Life expectancy`)) +
+  geom_boxplot()
+
+```
+  
+This boxplot shows the distributions of developed and developing countries. From this result, we may conclude that developed countries have longer life expectancy than developing countries.
+  
+  
+## Statistic analysis
+  
+Now, we can do some statistic analysis on this data, such as correlation analysis, linear regression and t-test.
+  
+### Correlation
+  
+Firstly, we try to find the relationships between the three quantitative variables that we focusing on - life expectancy, schooling, and alcohol.
+
+```{r}
+lifeExpectancy %>%
+  select(`Life expectancy`, Schooling, Alcohol) %>%
+  pairs()
+```
+  
+Looks like there are some interesting relationships here. 
+  
+From this pairwise scatterplots, it reveal a positive correlations between every two variables, particularly between life expectancy and schooling. This correlation is strong , and appears to be linear. So, we plan to conduct a linear regression using these two variables. However, the graph also shows some outliers, so using Spearman method must be better.
+  
+Let's take a look about the Pearson and Spearan correlation among them:
+```{r}
+lifeExpectancy %>%
+  select(`Life expectancy`, Schooling, Alcohol, GDP) %>%
+  drop_na() %>%
+  cor()
+
+cor.test(lifeExpectancy$`Life expectancy`, lifeExpectancy$Schooling)
+```
+
+```{r}
+lifeExpectancy %>%
+  select(`Life expectancy`, Schooling, Alcohol, GDP) %>%
+  drop_na() %>%
+  cor(method = 'spearman')
+
+cor.test(lifeExpectancy$`Life expectancy`, lifeExpectancy$Schooling, method = "spearman")
+```
+  
+In the results we can see every correlation coefficient is positive which means there is a positive correlation between every two variables. Moreover, the correlation of life expectancy and schooling is high reached at 0.81 by Spearman method, so they may have a strong positive relationship.
+  
+### Linear regression
+  
+Since we find a strong linear relationship in the scatterpolt between two quantitative variables, Life expectancy and Schooling, so we plan to make a linear regression on these two variables.
+  
+The null hypothesis of this regression is that the slope of the regression line is equal to 0. 
+  
+```{r}
+lifeExpectancy %>%
+  filter(Schooling > 0) %>%
+  drop_na() %>%
+  ggplot(aes(Schooling, `Life expectancy`)) + 
+  geom_point(aes(color = Status)) + 
+  geom_smooth(method = lm)
+
+subset <- lifeExpectancy %>%
+  filter(Schooling > 0)
+summary(lm(`Life expectancy` ~ Schooling, data = subset))
+```
+  
+Base on the output, the result is pretty obvious, a clear strong linear regression, and indicate a positive correlation between schooling and life expectancy. 
+  
+The p-value is much less than 0.05, so we can reject null hypothesis. 
+  
+The r-square is 0.61, indicating that approximately 61% of the variation is accounted for by this regression model. 
+  
+### t-test
+  
+Then, lets do a t-test to investigate whether there is a difference in life expectancy between developed and developing countries. 
+  
+The null hypothesis for this question is that the difference in average life expectancy between the two groups is zero. 
+
+```{r}
+t.test(`Life expectancy` ~ Status, data = lifeExpectancy)
+lifeExpectancy %>%
+  ggplot(aes(Status, `Life expectancy`)) +
+  geom_boxplot() 
+```
+  
+Base on the t-test result, the resulting p-value was much less than 0.05. Therefore, we can reject the null hypothesis, indicating that the mean life expectancy differs significantly between developed and developing countries.
+  
+  
+  
+Moreover,based on our earlier analysis, we have learned that longer schooling is associated with longer life expectancy, and that developed countries tend to have longer average schooling years. To explore whether individuals with higher education or prolonged education have equal life expectancy in developed and developing countries, we focused on data with 15 or more years of schooling. The null hypothesis is that there is no difference in the average life expectancy between two group countries for whom with 15 or more years of schooling.
+
+```{r}
+schooling15 <- filter(lifeExpectancy, Schooling >= 15)
+t.test(Schooling ~ Status, data = schooling15)
+
+schooling15 %>%
+  ggplot(aes(Status, Schooling)) +
+  geom_boxplot()
+```
+
+Our t-test yielded a p-value significantly below 0.05, allowing us to reject the null hypothesis, which means even both attend a long-term education, the life expectancy of developed countries is still significantly longer than life expectancy of developing countries. Our conclusion is also supported by the boxplot.
+  
+  
+## Conclusion
+The conclusion about this dataset base on our analysis research is that longer education, longer life expectancy. And developed countries have a longer life expectancy even considering only those with long-term education. Besides, for alcohol consumption, the consumption in developed countries is greater than that in developing countries, and the longer the education time, the higher the consumption. 
+  
+This is a comprehensive and interesting data set, and a lot of other factors needs us to analyze more. We will do the further research in the future. 
